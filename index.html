@@ -8,7 +8,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #222;
+            background: linear-gradient(135deg, #1e1e2f, #2b2b4f);
             color: #fff;
             display: flex;
             flex-direction: column;
@@ -17,41 +17,46 @@
             height: 100vh;
             padding: 10px;
             direction: rtl;
+            overflow: hidden;
         }
         .start-container {
             text-align: center;
             width: 100%;
+            animation: fadeIn 1s ease-in-out;
         }
         .start-container h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
+            text-shadow: 0 0 10px #444;
         }
-        .start-container input {
+        .start-container input, .start-container button {
             margin-bottom: 1rem;
             padding: 10px;
             font-size: 1rem;
             border: none;
             border-radius: 5px;
             width: 90%;
+            transition: all 0.3s ease-in-out;
+        }
+        .start-container input {
+            background-color: #333;
+            color: #fff;
         }
         .start-container button {
             background-color: #444;
             color: #fff;
-            border: none;
-            padding: 10px 15px;
-            font-size: 1rem;
-            border-radius: 5px;
             cursor: pointer;
-            margin: 5px;
-            width: 90%;
+            margin: 5px 0;
         }
         .start-container button:hover {
             background-color: #666;
+            transform: scale(1.05);
         }
         #playerList {
             margin-top: 1rem;
             font-size: 0.9rem;
             word-wrap: break-word;
+            animation: fadeIn 1s ease-in-out;
         }
         .card-container {
             display: none;
@@ -62,19 +67,22 @@
             width: 100%;
         }
         .card {
-            background-color: #333;
+            background: linear-gradient(135deg, #444, #666);
             color: #fff;
-            width: 100px;
-            height: 140px;
+            width: 120px;
+            height: 160px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
             font-size: 1rem;
             text-align: center;
-            padding: 5px;
+            padding: 10px;
+            opacity: 0;
+            transform: scale(0.8);
+            animation: popIn 0.5s forwards;
         }
         .card .player-name {
             font-size: 1.2rem;
@@ -83,6 +91,11 @@
         }
         .card .role {
             font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .card.revealed .role {
+            opacity: 1;
         }
         #goBack {
             display: none;
@@ -95,9 +108,20 @@
             cursor: pointer;
             margin-top: 10px;
             width: 90%;
+            animation: fadeIn 1s ease-in-out;
         }
         #goBack:hover {
             background-color: #666;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
@@ -113,10 +137,6 @@
             <input type="number" id="mafiaCount" min="0" style="width: 50px;">
             <label for="citizenCount">عدد المواطنين:</label>
             <input type="number" id="citizenCount" min="0" style="width: 50px;">
-            <label for="doctorCount">عدد الأطباء:</label>
-            <input type="number" id="doctorCount" min="0" style="width: 50px;">
-            <label for="detectiveCount">عدد المحققين:</label>
-            <input type="number" id="detectiveCount" min="0" style="width: 50px;">
         </div>
         <button id="startGame">بدء اللعبة</button>
         <div id="playerList"></div>
@@ -137,8 +157,6 @@
 
         const mafiaInput = document.getElementById('mafiaCount');
         const citizenInput = document.getElementById('citizenCount');
-        const doctorInput = document.getElementById('doctorCount');
-        const detectiveInput = document.getElementById('detectiveCount');
 
         let players = JSON.parse(localStorage.getItem('savedPlayers')) || [];
 
@@ -193,10 +211,8 @@
 
             const mafiaCount = parseInt(mafiaInput.value) || 0;
             const citizenCount = parseInt(citizenInput.value) || 0;
-            const doctorCount = parseInt(doctorInput.value) || 0;
-            const detectiveCount = parseInt(detectiveInput.value) || 0;
 
-            const totalRoles = mafiaCount + citizenCount + doctorCount + detectiveCount;
+            const totalRoles = mafiaCount + citizenCount + 1 + 1; // واحد دكتور وواحد محقق
 
             if (totalRoles !== players.length) {
                 alert('يجب أن يكون مجموع الأدوار مساويًا لعدد اللاعبين.');
@@ -206,8 +222,8 @@
             const deck = [];
             for (let i = 0; i < mafiaCount; i++) deck.push('مافيا');
             for (let i = 0; i < citizenCount; i++) deck.push('مواطن');
-            for (let i = 0; i < doctorCount; i++) deck.push('طبيب');
-            for (let i = 0; i < detectiveCount; i++) deck.push('محقق');
+            deck.push('طبيب');
+            deck.push('محقق');
 
             shuffleArray(deck);
 
@@ -234,6 +250,7 @@
 
                 card.addEventListener('click', () => {
                     roleElem.textContent = deck[index];
+                    card.classList.add('revealed');
                     setTimeout(() => {
                         card.style.display = 'none';
                     }, 5000);
