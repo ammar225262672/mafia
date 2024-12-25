@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mafia Card Game</title>
+    <title>لعبة مافيا</title>
     <style>
         body {
             margin: 0;
@@ -16,6 +16,7 @@
             justify-content: center;
             height: 100vh;
             padding: 10px;
+            direction: rtl;
         }
         .start-container {
             text-align: center;
@@ -74,7 +75,6 @@
             font-size: 1rem;
             text-align: center;
             padding: 5px;
-            transition: opacity 0.5s ease;
         }
         .card .player-name {
             font-size: 1.2rem;
@@ -83,20 +83,6 @@
         }
         .card .role {
             font-size: 1rem;
-            display: none;
-        }
-        .card button {
-            margin-top: 10px;
-            padding: 5px 10px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #555;
-            color: #fff;
-        }
-        .card button:hover {
-            background-color: #777;
         }
         #goBack {
             display: none;
@@ -117,14 +103,24 @@
 </head>
 <body>
     <div class="start-container">
-        <h1>Welcome to Mafia Card Game</h1>
-        <input type="text" id="playerName" placeholder="Enter player name" />
-        <button id="addPlayer">Add Player</button>
-        <button id="clearPlayers">Clear Players</button>
-        <button id="savePlayers">Save Players</button>
-        <button id="startGame">Start Game</button>
+        <h1>مرحبًا بك في لعبة مافيا</h1>
+        <input type="text" id="playerName" placeholder="أدخل اسم اللاعب" />
+        <button id="addPlayer">إضافة لاعب</button>
+        <button id="clearPlayers">مسح اللاعبين</button>
+        <button id="savePlayers">حفظ اللاعبين</button>
+        <div>
+            <label for="mafiaCount">عدد المافيا:</label>
+            <input type="number" id="mafiaCount" min="0" style="width: 50px;">
+            <label for="citizenCount">عدد المواطنين:</label>
+            <input type="number" id="citizenCount" min="0" style="width: 50px;">
+            <label for="doctorCount">عدد الأطباء:</label>
+            <input type="number" id="doctorCount" min="0" style="width: 50px;">
+            <label for="detectiveCount">عدد المحققين:</label>
+            <input type="number" id="detectiveCount" min="0" style="width: 50px;">
+        </div>
+        <button id="startGame">بدء اللعبة</button>
         <div id="playerList"></div>
-        <button id="goBack">Go Back</button>
+        <button id="goBack">الرجوع</button>
     </div>
     <div class="card-container" id="cardContainer"></div>
 
@@ -138,6 +134,11 @@
         const cardContainer = document.getElementById('cardContainer');
         const playerNameInput = document.getElementById('playerName');
         const playerList = document.getElementById('playerList');
+
+        const mafiaInput = document.getElementById('mafiaCount');
+        const citizenInput = document.getElementById('citizenCount');
+        const doctorInput = document.getElementById('doctorCount');
+        const detectiveInput = document.getElementById('detectiveCount');
 
         let players = JSON.parse(localStorage.getItem('savedPlayers')) || [];
 
@@ -157,7 +158,7 @@
                 renderPlayerList();
                 playerNameInput.value = '';
             } else {
-                alert('Please enter a player name.');
+                alert('يرجى إدخال اسم اللاعب.');
             }
         });
 
@@ -168,7 +169,7 @@
 
         savePlayersButton.addEventListener('click', () => {
             localStorage.setItem('savedPlayers', JSON.stringify(players));
-            alert('Players saved successfully!');
+            alert('تم حفظ اللاعبين بنجاح!');
         });
 
         goBackButton.addEventListener('click', () => {
@@ -186,24 +187,27 @@
 
         startButton.addEventListener('click', () => {
             if (players.length === 0) {
-                alert('Please add at least one player.');
+                alert('يرجى إضافة لاعب واحد على الأقل.');
                 return;
             }
 
-            const roles = ['Mafia', 'Citizen', 'Doctor', 'Detective'];
-            const roleCounts = {
-                Mafia: 1,
-                Citizen: players.length - 3,
-                Doctor: 1,
-                Detective: 1
-            };
+            const mafiaCount = parseInt(mafiaInput.value) || 0;
+            const citizenCount = parseInt(citizenInput.value) || 0;
+            const doctorCount = parseInt(doctorInput.value) || 0;
+            const detectiveCount = parseInt(detectiveInput.value) || 0;
+
+            const totalRoles = mafiaCount + citizenCount + doctorCount + detectiveCount;
+
+            if (totalRoles !== players.length) {
+                alert('يجب أن يكون مجموع الأدوار مساويًا لعدد اللاعبين.');
+                return;
+            }
 
             const deck = [];
-            for (const role in roleCounts) {
-                for (let i = 0; i < roleCounts[role]; i++) {
-                    deck.push(role);
-                }
-            }
+            for (let i = 0; i < mafiaCount; i++) deck.push('مافيا');
+            for (let i = 0; i < citizenCount; i++) deck.push('مواطن');
+            for (let i = 0; i < doctorCount; i++) deck.push('طبيب');
+            for (let i = 0; i < detectiveCount; i++) deck.push('محقق');
 
             shuffleArray(deck);
 
@@ -222,22 +226,18 @@
 
                 const roleElem = document.createElement('div');
                 roleElem.classList.add('role');
-                roleElem.textContent = deck[index];
-
-                const revealButton = document.createElement('button');
-                revealButton.textContent = 'Reveal Role';
-                revealButton.addEventListener('click', () => {
-                    roleElem.style.display = 'block';
-                    setTimeout(() => {
-                        card.style.opacity = '0';
-                        setTimeout(() => card.remove(), 500);
-                    }, 5000);
-                });
+                roleElem.textContent = '';
 
                 card.appendChild(playerNameElem);
                 card.appendChild(roleElem);
-                card.appendChild(revealButton);
                 cardContainer.appendChild(card);
+
+                card.addEventListener('click', () => {
+                    roleElem.textContent = deck[index];
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 5000);
+                });
             });
         });
 
